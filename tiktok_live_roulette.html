@@ -1,0 +1,445 @@
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-sans, sans-serif); }
+  .app { padding: 1rem; max-width: 700px; }
+  .header { display: flex; align-items: center; gap: 10px; margin-bottom: 1.25rem; }
+  .header h1 { font-size: 20px; font-weight: 500; color: var(--color-text-primary); }
+  .badge { font-size: 11px; padding: 3px 8px; border-radius: 99px; font-weight: 500; }
+  .badge-live { background: #ff4444; color: #fff; animation: pulse 1.5s infinite; }
+  .badge-off { background: var(--color-background-secondary); color: var(--color-text-secondary); border: 0.5px solid var(--color-border-tertiary); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.6} }
+
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1.25rem; }
+  .card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1rem 1.25rem; }
+  .card h2 { font-size: 13px; color: var(--color-text-secondary); font-weight: 400; margin-bottom: .75rem; text-transform: uppercase; letter-spacing: .05em; }
+
+  .connect-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+  .connect-row input { flex: 1; padding: 7px 10px; font-size: 14px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: var(--color-background-secondary); color: var(--color-text-primary); outline: none; }
+  .connect-row input:focus { border-color: #ff4444; }
+  .btn { padding: 7px 14px; font-size: 13px; font-weight: 500; border-radius: var(--border-radius-md); cursor: pointer; border: 0.5px solid var(--color-border-secondary); background: var(--color-background-secondary); color: var(--color-text-primary); transition: background .15s; white-space: nowrap; }
+  .btn:hover { background: var(--color-background-tertiary); }
+  .btn-red { background: #ff4444; color: #fff; border-color: #ff4444; }
+  .btn-red:hover { background: #e03030; }
+  .btn-sm { padding: 4px 10px; font-size: 12px; }
+
+  .status-row { font-size: 12px; color: var(--color-text-secondary); display: flex; align-items: center; gap: 6px; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: #aaa; flex-shrink: 0; }
+  .dot.green { background: #2ecc71; }
+  .dot.red { background: #ff4444; animation: pulse 1s infinite; }
+
+  .gift-list { display: flex; flex-direction: column; gap: 6px; }
+  .gift-item { display: flex; align-items: center; gap: 8px; font-size: 13px; padding: 6px 8px; border-radius: var(--border-radius-md); background: var(--color-background-secondary); }
+  .gift-icon { font-size: 18px; }
+  .gift-name { flex: 1; color: var(--color-text-primary); }
+  .gift-val { font-size: 11px; color: var(--color-text-secondary); margin-right: 4px; }
+  .gift-del { cursor: pointer; color: var(--color-text-secondary); font-size: 16px; background: none; border: none; padding: 0 2px; line-height: 1; }
+  .gift-del:hover { color: #ff4444; }
+
+  .add-gift { display: flex; gap: 6px; margin-top: 8px; }
+  .add-gift input { flex: 1; padding: 6px 8px; font-size: 13px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: var(--color-background-secondary); color: var(--color-text-primary); outline: none; }
+  .add-gift input:focus { border-color: #ff4444; }
+
+  .wheel-wrap { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  canvas#wheel { border-radius: 50%; }
+  .pointer { font-size: 28px; line-height: 1; color: #ff4444; margin-bottom: -8px; }
+
+  .segments-list { width: 100%; }
+  .seg-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 13px; }
+  .seg-color { width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0; }
+  .seg-label { flex: 1; color: var(--color-text-primary); }
+  .seg-pct { width: 44px; padding: 3px 6px; font-size: 12px; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); background: var(--color-background-secondary); color: var(--color-text-primary); text-align: right; }
+  .seg-del { cursor: pointer; font-size: 15px; background: none; border: none; color: var(--color-text-secondary); padding: 0; }
+  .seg-del:hover { color: #ff4444; }
+  .pct-total { font-size: 12px; margin-top: 4px; }
+  .pct-ok { color: var(--color-text-success, #2ecc71); }
+  .pct-bad { color: #ff4444; }
+
+  .add-seg { display: flex; gap: 6px; margin-top: 6px; }
+  .add-seg input { flex: 1; padding: 5px 8px; font-size: 12px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: var(--color-background-secondary); color: var(--color-text-primary); outline: none; }
+
+  .result-box { text-align: center; padding: .5rem; }
+  .result-label { font-size: 13px; color: var(--color-text-secondary); margin-bottom: 4px; }
+  .result-name { font-size: 22px; font-weight: 500; color: var(--color-text-primary); min-height: 30px; }
+
+  .log-box { max-height: 130px; overflow-y: auto; font-size: 12px; color: var(--color-text-secondary); }
+  .log-entry { padding: 3px 0; border-bottom: 0.5px solid var(--color-border-tertiary); }
+  .log-entry span { color: var(--color-text-primary); font-weight: 500; }
+
+  .full-card { grid-column: 1 / -1; }
+  .info-box { font-size: 12px; color: var(--color-text-secondary); background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: .6rem .8rem; margin-top: 6px; line-height: 1.6; }
+  .info-box a { color: #ff4444; }
+  .tabs { display: flex; gap: 2px; margin-bottom: 12px; }
+  .tab { padding: 5px 12px; font-size: 13px; cursor: pointer; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-tertiary); background: none; color: var(--color-text-secondary); }
+  .tab.active { background: #ff4444; color: #fff; border-color: #ff4444; }
+  .section { display: none; } .section.active { display: block; }
+</style>
+
+<div class="app">
+  <div class="header">
+    <div style="font-size:22px">🎰</div>
+    <h1>TikTok Live Roulette</h1>
+    <span class="badge badge-off" id="live-badge">OFFLINE</span>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('connect')">Connect</button>
+    <button class="tab" onclick="switchTab('wheel')">Wheel</button>
+    <button class="tab" onclick="switchTab('gifts')">Gift Triggers</button>
+    <button class="tab" onclick="switchTab('log')">Event Log</button>
+  </div>
+
+  <div id="tab-connect" class="section active">
+    <div class="card" style="margin-bottom:12px">
+      <h2>TikTok Account</h2>
+      <div class="connect-row">
+        <input id="username-input" type="text" placeholder="@username (e.g. @mrdanz001)" value="@mrdanz001" />
+        <button class="btn btn-red" id="connect-btn" onclick="toggleConnect()">Connect</button>
+      </div>
+      <div class="status-row"><div class="dot" id="conn-dot"></div><span id="conn-status">Not connected</span></div>
+      <div class="info-box">
+        ⚠️ TikTok Live requires a backend proxy server for real connections (CORS restriction).<br>
+        <strong>To go live right now:</strong> use <a href="https://github.com/zerodytrash/TikTok-Live-Connector" target="_blank">TikTok-Live-Connector</a> Node.js server + set proxy URL below, OR use <strong>Demo Mode</strong> to test the roulette locally.
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:12px">
+      <h2>Proxy / WebSocket Server (optional)</h2>
+      <div class="connect-row">
+        <input id="proxy-input" type="text" placeholder="ws://localhost:8080 or https://your-proxy.com" />
+        <button class="btn" onclick="saveProxy()">Save</button>
+      </div>
+      <div class="status-row" style="margin-top:4px"><div class="dot" id="proxy-dot"></div><span id="proxy-status">No proxy set — using demo mode</span></div>
+    </div>
+
+    <div class="card">
+      <h2>Demo / Test Mode</h2>
+      <p style="font-size:13px;color:var(--color-text-secondary);margin-bottom:10px">Simulate gift events to test the roulette without a live stream.</p>
+      <div style="display:flex;flex-wrap:wrap;gap:8px" id="demo-buttons"></div>
+    </div>
+  </div>
+
+  <div id="tab-wheel" class="section">
+    <div class="grid">
+      <div class="card" style="grid-column:1/2">
+        <h2>Wheel Segments</h2>
+        <div class="segments-list" id="seg-list"></div>
+        <div id="pct-total" class="pct-total"></div>
+        <div class="add-seg">
+          <input id="new-seg-label" placeholder="Label (e.g. Win 100₱)" maxlength="20" />
+          <input id="new-seg-pct" type="number" placeholder="%" min="1" max="100" style="width:56px" />
+          <button class="btn btn-sm" onclick="addSegment()">Add</button>
+        </div>
+      </div>
+      <div class="card" style="grid-column:2/3;display:flex;flex-direction:column;align-items:center;gap:8px">
+        <h2 style="align-self:flex-start">Preview</h2>
+        <div class="pointer">▼</div>
+        <canvas id="wheel" width="220" height="220"></canvas>
+        <div class="result-box">
+          <div class="result-label">Last result</div>
+          <div class="result-name" id="result-name">—</div>
+        </div>
+        <button class="btn btn-sm btn-red" onclick="manualSpin()">Manual Spin</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-gifts" class="section">
+    <div class="card">
+      <h2>Gift Triggers</h2>
+      <p style="font-size:13px;color:var(--color-text-secondary);margin-bottom:10px">When one of these gifts is received, the wheel will spin automatically.</p>
+      <div class="gift-list" id="gift-list"></div>
+      <div class="add-gift" style="margin-top:10px">
+        <input id="new-gift-emoji" placeholder="🎁" maxlength="4" style="width:46px;text-align:center" />
+        <input id="new-gift-name" placeholder="Gift name (e.g. Rose)" />
+        <button class="btn btn-sm" onclick="addGift()">+ Add</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-log" class="section">
+    <div class="card">
+      <h2>Live Event Log</h2>
+      <div class="log-box" id="log-box">
+        <div class="log-entry" style="color:var(--color-text-secondary);font-style:italic">Waiting for events...</div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-top:8px">
+        <button class="btn btn-sm" onclick="clearLog()">Clear log</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const COLORS = ['#ff4444','#ff8c42','#ffd166','#06d6a0','#118ab2','#9b5de5','#f15bb5','#00bbf9','#e63946','#52b788'];
+
+let segments = [
+  {label:'Win 500₱', pct:10},
+  {label:'Win 200₱', pct:20},
+  {label:'Win 50₱', pct:30},
+  {label:'Better luck!', pct:40},
+];
+
+let gifts = [
+  {emoji:'🌹', name:'Rose'},
+  {emoji:'🎁', name:'TikTok Universe'},
+  {emoji:'💎', name:'Diamond'},
+];
+
+let connected = false;
+let proxyUrl = '';
+let spinning = false;
+let currentAngle = 0;
+let ws = null;
+
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i)=>{
+    const names = ['connect','wheel','gifts','log'];
+    t.classList.toggle('active', names[i]===name);
+  });
+  document.querySelectorAll('.section').forEach(s=>{
+    s.classList.toggle('active', s.id==='tab-'+name);
+  });
+  if(name==='wheel') drawWheel();
+}
+
+function renderSegments() {
+  const list = document.getElementById('seg-list');
+  let total = segments.reduce((a,s)=>a+s.pct,0);
+  list.innerHTML = segments.map((s,i)=>`
+    <div class="seg-row">
+      <div class="seg-color" style="background:${COLORS[i%COLORS.length]}"></div>
+      <span class="seg-label">${s.label}</span>
+      <input class="seg-pct" type="number" value="${s.pct}" min="1" max="100"
+        oninput="segments[${i}].pct=Math.max(1,parseInt(this.value)||1);renderSegments();drawWheel()" />
+      <span style="font-size:12px;color:var(--color-text-secondary)">%</span>
+      <button class="seg-del" onclick="segments.splice(${i},1);renderSegments();drawWheel()">×</button>
+    </div>`).join('');
+  const tot = document.getElementById('pct-total');
+  tot.textContent = `Total: ${total}%`;
+  tot.className = 'pct-total ' + (total===100?'pct-ok':'pct-bad');
+}
+
+function addSegment() {
+  const label = document.getElementById('new-seg-label').value.trim();
+  const pct = parseInt(document.getElementById('new-seg-pct').value)||10;
+  if(!label) return;
+  segments.push({label, pct});
+  document.getElementById('new-seg-label').value='';
+  document.getElementById('new-seg-pct').value='';
+  renderSegments(); drawWheel();
+}
+
+function normalizePcts() {
+  const total = segments.reduce((a,s)=>a+s.pct,0);
+  return segments.map(s=>s.pct/total);
+}
+
+function drawWheel(highlightIdx=-1) {
+  const canvas = document.getElementById('wheel');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const cx=110, cy=110, r=105;
+  ctx.clearRect(0,0,220,220);
+  const normed = normalizePcts();
+  let start = currentAngle - Math.PI/2;
+  segments.forEach((seg,i)=>{
+    const sweep = normed[i]*2*Math.PI;
+    ctx.beginPath();
+    ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,r,start,start+sweep);
+    ctx.closePath();
+    ctx.fillStyle = COLORS[i%COLORS.length];
+    ctx.fill();
+    ctx.strokeStyle='#fff';
+    ctx.lineWidth=2;
+    ctx.stroke();
+    ctx.save();
+    ctx.translate(cx,cy);
+    ctx.rotate(start+sweep/2);
+    ctx.textAlign='right';
+    ctx.fillStyle='#fff';
+    ctx.font='bold 11px sans-serif';
+    ctx.shadowColor='rgba(0,0,0,0.4)';
+    ctx.shadowBlur=3;
+    const maxLen=12;
+    const txt=seg.label.length>maxLen?seg.label.slice(0,maxLen)+'…':seg.label;
+    ctx.fillText(txt, r-8, 4);
+    ctx.restore();
+    start+=sweep;
+  });
+  ctx.beginPath();
+  ctx.arc(cx,cy,18,0,Math.PI*2);
+  ctx.fillStyle='#fff';
+  ctx.fill();
+  ctx.strokeStyle='#ccc';
+  ctx.lineWidth=1.5;
+  ctx.stroke();
+}
+
+function spinTo(winIdx) {
+  if(spinning) return;
+  spinning = true;
+  const normed = normalizePcts();
+  let cumulative = 0;
+  const angles = normed.map(p=>{const start=cumulative;cumulative+=p;return {start,end:cumulative};});
+  const targetCenter = (angles[winIdx].start+angles[winIdx].end)/2;
+  const targetAngle = -(targetCenter*2*Math.PI);
+  const extraSpins = (3+Math.random()*3)*2*Math.PI;
+  const finalAngle = targetAngle + extraSpins;
+  const duration = 3500;
+  const startAngle = currentAngle;
+  const startTime = performance.now();
+  function ease(t){return t<1?1-Math.pow(1-t,4):1;}
+  function frame(now){
+    const t = Math.min((now-startTime)/duration,1);
+    currentAngle = startAngle + (finalAngle-startAngle)*ease(t);
+    drawWheel();
+    if(t<1){ requestAnimationFrame(frame); }
+    else {
+      currentAngle = finalAngle;
+      spinning=false;
+      document.getElementById('result-name').textContent=segments[winIdx].label;
+      addLog('🎰','Wheel landed on', segments[winIdx].label);
+    }
+  }
+  requestAnimationFrame(frame);
+}
+
+function pickWinner() {
+  const normed = normalizePcts();
+  const rand = Math.random();
+  let cum = 0;
+  for(let i=0;i<normed.length;i++){cum+=normed[i];if(rand<=cum)return i;}
+  return normed.length-1;
+}
+
+function manualSpin() {
+  if(spinning||segments.length<2) return;
+  spinTo(pickWinner());
+  switchTab('wheel');
+}
+
+function renderGifts() {
+  document.getElementById('gift-list').innerHTML = gifts.map((g,i)=>`
+    <div class="gift-item">
+      <span class="gift-icon">${g.emoji}</span>
+      <span class="gift-name">${g.name}</span>
+      <span class="gift-val">triggers spin</span>
+      <button class="gift-del" onclick="gifts.splice(${i},1);renderGifts()">×</button>
+    </div>`).join('');
+  renderDemoButtons();
+}
+
+function addGift() {
+  const emoji = document.getElementById('new-gift-emoji').value.trim()||'🎁';
+  const name = document.getElementById('new-gift-name').value.trim();
+  if(!name) return;
+  gifts.push({emoji,name});
+  document.getElementById('new-gift-emoji').value='';
+  document.getElementById('new-gift-name').value='';
+  renderGifts();
+}
+
+function renderDemoButtons() {
+  const container = document.getElementById('demo-buttons');
+  container.innerHTML = gifts.map(g=>`
+    <button class="btn btn-sm" onclick="simulateGift('${g.name}','${g.emoji}','DemoUser')">
+      ${g.emoji} ${g.name}
+    </button>`).join('');
+}
+
+function simulateGift(name, emoji, sender) {
+  addLog(emoji, sender+' sent', name);
+  const matched = gifts.find(g=>g.name.toLowerCase()===name.toLowerCase());
+  if(matched){
+    switchTab('wheel');
+    setTimeout(()=>spinTo(pickWinner()),400);
+  }
+}
+
+function addLog(icon, action, detail) {
+  const box = document.getElementById('log-box');
+  const now = new Date().toLocaleTimeString();
+  const entry = document.createElement('div');
+  entry.className='log-entry';
+  entry.innerHTML=`[${now}] ${icon} ${action}: <span>${detail}</span>`;
+  if(box.firstChild && box.firstChild.style && box.firstChild.style.fontStyle==='italic') box.innerHTML='';
+  box.prepend(entry);
+}
+
+function clearLog() {
+  document.getElementById('log-box').innerHTML='<div class="log-entry" style="color:var(--color-text-secondary);font-style:italic">Waiting for events...</div>';
+}
+
+function saveProxy() {
+  proxyUrl = document.getElementById('proxy-input').value.trim();
+  if(proxyUrl){
+    document.getElementById('proxy-status').textContent='Proxy set: '+proxyUrl;
+    document.getElementById('proxy-dot').className='dot green';
+  } else {
+    document.getElementById('proxy-status').textContent='No proxy set — using demo mode';
+    document.getElementById('proxy-dot').className='dot';
+  }
+}
+
+function toggleConnect() {
+  if(!connected) {
+    const user = document.getElementById('username-input').value.trim();
+    if(!user){alert('Enter a username');return;}
+    if(proxyUrl) {
+      tryWebSocket(user);
+    } else {
+      connected=true;
+      setConnected(true,'Demo mode active — simulate gifts below');
+      addLog('📡','Demo mode','Connected as '+user);
+    }
+  } else {
+    if(ws){ws.close();ws=null;}
+    connected=false;
+    setConnected(false,'Disconnected');
+  }
+}
+
+function tryWebSocket(user) {
+  try {
+    ws = new WebSocket(proxyUrl);
+    ws.onopen = ()=>{
+      ws.send(JSON.stringify({action:'connect',username:user}));
+      connected=true;
+      setConnected(true,'Connected to '+proxyUrl);
+      addLog('📡','WebSocket','Connected to proxy');
+    };
+    ws.onmessage = (e)=>{
+      try{
+        const data=JSON.parse(e.data);
+        if(data.type==='gift'){
+          const gName=data.giftName||data.gift||'Unknown';
+          const sender=data.user||data.username||'Viewer';
+          const emoji=gifts.find(g=>g.name.toLowerCase()===gName.toLowerCase())?.emoji||'🎁';
+          addLog(emoji,sender+' sent',gName);
+          const matched=gifts.find(g=>g.name.toLowerCase()===gName.toLowerCase());
+          if(matched){switchTab('wheel');setTimeout(()=>spinTo(pickWinner()),300);}
+        }
+      }catch(err){}
+    };
+    ws.onclose = ()=>{connected=false;setConnected(false,'Connection closed');ws=null;};
+    ws.onerror = ()=>{connected=false;setConnected(false,'WebSocket error — check proxy URL');ws=null;};
+  } catch(e) {
+    setConnected(false,'Invalid WebSocket URL');
+  }
+}
+
+function setConnected(on, msg) {
+  document.getElementById('conn-dot').className='dot '+(on?'green':'');
+  document.getElementById('conn-status').textContent=msg;
+  document.getElementById('connect-btn').textContent=on?'Disconnect':'Connect';
+  document.getElementById('connect-btn').className='btn '+(on?'':'btn-red');
+  document.getElementById('live-badge').textContent=on?'LIVE':'OFFLINE';
+  document.getElementById('live-badge').className='badge '+(on?'badge-live':'badge-off');
+}
+
+renderSegments();
+drawWheel();
+renderGifts();
+</script>
